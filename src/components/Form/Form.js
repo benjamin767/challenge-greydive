@@ -1,16 +1,24 @@
 import React, { useEffect, useState } from "react";
 import Select from "../Select/Select";
+import { collection, addDoc } from "firebase/firestore"; 
+import { db } from "../../DB/db";
 
 export default function Form() {
     const [items, setItems] = useState([]);
+    const [input, setInput] = useState({
+        full_name: "",
+        email: "",
+        birth_date: "",
+        country_of_origin: "",
+    });
     const getItems= () => {
-    fetch('./json/data.json')
-      .then(response => response.json())
-      .then(response => {
-        console.log(response)
-        setItems(response.items);
-      })
-      .catch(error => console.log(error));
+        fetch('./json/data.json')
+        .then(response => response.json())
+        .then(response => {
+            console.log(response)
+            setItems(response.items);
+        })
+        .catch(error => console.log(error));
     }
     useEffect(() => {
         getItems();
@@ -20,20 +28,41 @@ export default function Form() {
     const [select] = items.filter(item => item.type === "select");
     const [submit] = items.filter(item => item.type === "submit");
 
+    const handleChange = (event) => {
+        setInput({
+            ...input,
+            [event.target.name]: event.target.value
+        });
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const docRef = await addDoc(collection(db, "usuarios"), {
+            ...input
+        })
+        .then(() => alert("registro exitoso"))
+        .catch(error => console.log(error));
+        console.log("Document written with ID: ", docRef.id);
+        
+        console.log("Lllegueeee")
+    }
+
     return (
         <div>
             <form>
                 {inputs && inputs.map((item,i) => {
-                    return <div>
+                    return <div key={i}>
                         <label>{item.label}: </label>    
                         <input 
                             type={item.type}
                             required={item.required}
                             name={item.name}
+                            value={input[item.name]}
+                            onChange={handleChange}
                         />
                      </div>;
                 })}
-                <div> {select?<Select item={select}/>: "Loading..."} </div>
+                <div> {select?<Select item={select} handler={handleChange}/>: "Loading..."} </div>
                 <div> 
                     {checkbox ? <><input 
                         type={checkbox.type}
@@ -44,10 +73,12 @@ export default function Form() {
                 </div>
                 <div>
                     {submit ? <input 
-                        type={submit.type}
+                        onClick={handleSubmit}
                         value={submit.label}
-                    /> : "Loading.."}</div>
+                        type={submit.type}
+                    />: "Loading.."}</div>
             </form>
+            
         </div>
     );
 }
