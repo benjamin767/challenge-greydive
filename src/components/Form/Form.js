@@ -23,7 +23,8 @@ export default function Form() {
     useEffect(() => {
         getItems();
     },[]);
-    const inputs = items.filter(item => item.type !== "submit" && item.type !== "select" && item.type !== "checkbox");
+    const inputs = items.filter(item => item.type !== "submit" && item.type !== "select" && item.type !== "checkbox" && item.type !== "date");
+    const [date] = items.filter(item => item.type === "date");
     const [checkbox] = items.filter(item => item.type === "checkbox");
     const [select] = items.filter(item => item.type === "select");
     const [submit] = items.filter(item => item.type === "submit");
@@ -48,37 +49,55 @@ export default function Form() {
     }
 
     return (
-        <div>
-            <form>
-                {inputs && inputs.map((item,i) => {
-                    return <div key={i}>
-                        <label>{item.label}: </label>    
-                        <input 
-                            type={item.type}
-                            required={item.required}
-                            name={item.name}
-                            value={input[item.name]}
-                            onChange={handleChange}
-                        />
-                     </div>;
-                })}
-                <div> {select?<Select item={select} handler={handleChange}/>: "Loading..."} </div>
-                <div> 
-                    {checkbox ? <><input 
-                        type={checkbox.type}
-                        name={checkbox.name} 
-                        required={checkbox.required}
-                    /> 
-                    <label>{checkbox.label}</label></> : "Loading..." }
+        <div className="container">
+            <div className="row justify-content-md-center">
+                <div className="col-md-auto">
+                <form>
+                    {inputs && inputs.map((item,i) => {
+                        return <div key={i}>
+                            <label className="form-label">{item.label}: </label>    
+                            <input 
+                                type={item.type}
+                                required={item.required}
+                                name={item.name}
+                                value={input[item.name]}
+                                onChange={handleChange}
+                                className="form-control w-100 mb-2"
+                            />
+                        </div>;
+                    })}
+                    <div> 
+                        {date ? <>
+                            <label className="form-label">{date.label}</label>
+                            <input 
+                                type={date.type}
+                                name={date.name} 
+                                required={date.required}
+                                className="form-control w-100 mb-2"
+                        /> 
+                        </> : "Loading..." }
+                    </div>
+                    <div className="mb-2"> {select?<Select item={select} handler={handleChange}/>: "Loading..."} </div>
+                    <div className="form-check mb-2"> 
+                        {checkbox ? <>
+                            <input 
+                                type={checkbox.type}
+                                name={checkbox.name} 
+                                required={checkbox.required}
+                                className="form-check-input"
+                        /> 
+                        <label className="form-check-label">{checkbox.label}</label></> : "Loading..." }
+                    </div>
+                    <div>
+                        {submit ? <input 
+                            onClick={handleSubmit}
+                            value={submit.label}
+                            type={submit.type}
+                            className="btn btn-outline-secondary"
+                        />: "Loading.."}</div>
+                </form>
                 </div>
-                <div>
-                    {submit ? <input 
-                        onClick={handleSubmit}
-                        value={submit.label}
-                        type={submit.type}
-                    />: "Loading.."}</div>
-            </form>
-            
+            </div>
         </div>
     );
 }
