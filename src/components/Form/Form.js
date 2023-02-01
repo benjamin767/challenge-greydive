@@ -1,7 +1,29 @@
 import React, { useEffect, useState } from "react";
 import Select from "../Select/Select";
-import { collection, addDoc } from "firebase/firestore"; 
+import { collection, addDoc } from "firebase/firestore";
+import swal from 'sweetalert';
 import { db } from "../../DB/db";
+
+export function validate(state) {
+    let error = { error: false };
+    if(!state.full_name) {
+        error.full_name = "Nombre completo es requerido.";
+        error.error = true;
+    }
+    if(!state.email) {
+        error.email = "Email es requerido.";
+        error.error = true;
+    }
+    if(!state.birth_date) {
+        error.birth_date = "Fecha de nacimiento es requerido.";
+        error.error = true;
+    }
+    if(!state.terms_and_conditions){
+        error.terms_and_conditions = "Debe aceptar los terminos y condiciones para avanzar.";
+        error.error = true;
+    }
+    return error;
+}   
 
 export default function Form() {
     const [items, setItems] = useState([]);
@@ -11,6 +33,7 @@ export default function Form() {
         birth_date: "",
         country_of_origin: "",
     });
+    const [errors, setErrors] = useState({error: true});
     const getItems= () => {
         fetch('./json/data.json')
         .then(response => response.json())
@@ -30,10 +53,12 @@ export default function Form() {
     const [submit] = items.filter(item => item.type === "submit");
 
     const handleChange = (event) => {
+        console.log(event.target.value)
         setInput({
             ...input,
             [event.target.name]: event.target.value
         });
+        setErrors(validate({...input, [event.target.name]:event.target.value}));
     };
 
     const handleSubmit = async (event) => {
@@ -41,18 +66,38 @@ export default function Form() {
         const docRef = await addDoc(collection(db, "usuarios"), {
             ...input
         })
-        .then(() => alert("registro exitoso"))
+        .then((res) => {
+            swal({
+                title: "¡Registro completado!",
+                icon: "info",
+                buttons:["No", "Ver respuestas"]
+            }).then(response => {
+                if(response) {
+                    window.location = `http://localhost:3000/answer/${docRef.id}`;
+                }
+                else {
+                    window.location = "http://localhost:3000/";
+                }
+            });
+            return res;
+        })
         .catch(error => console.log(error));
         console.log("Document written with ID: ", docRef.id);
-        
-        console.log("Lllegueeee")
+        setInput({
+            full_name: "",
+            email: "",
+            birth_date: "",
+            country_of_origin: "",
+        });
     }
+
+    console.log(process.env.REACT_APP_FIREBASE_APP_ID)
 
     return (
         <div className="container">
             <div className="row justify-content-md-center">
                 <div className="col-md-auto">
-                <form>
+                <form onSubmit={handleSubmit}>
                     {inputs && inputs.map((item,i) => {
                         return <div key={i}>
                             <label className="form-label">{item.label}: </label>    
@@ -64,6 +109,7 @@ export default function Form() {
                                 onChange={handleChange}
                                 className="form-control w-100 mb-2"
                             />
+                            {errors[item.name] && <p className="text-danger">{errors[item.name]}</p>}
                         </div>;
                     })}
                     <div> 
@@ -72,29 +118,38 @@ export default function Form() {
                             <input 
                                 type={date.type}
                                 name={date.name} 
+                                value={input[date.name]}
                                 required={date.required}
+                                onChange={handleChange}
                                 className="form-control w-100 mb-2"
-                        /> 
+                            /> 
+                            {errors[date.name] && <p className="text-danger">{errors[date.name]}</p>}
                         </> : "Loading..." }
+                        
                     </div>
-                    <div className="mb-2"> {select?<Select item={select} handler={handleChange}/>: "Loading..."} </div>
+                    <div className="mb-2"> {select ? <>
+                        <Select item={select} handler={handleChange}/>
+                    </>: "Loading..."} </div>
                     <div className="form-check mb-2"> 
                         {checkbox ? <>
                             <input 
+                                className="form-check-input"
                                 type={checkbox.type}
                                 name={checkbox.name} 
                                 required={checkbox.required}
-                                className="form-check-input"
-                        /> 
-                        <label className="form-check-label">{checkbox.label}</label></> : "Loading..." }
+                                onChange={handleChange}
+                            /> 
+                            <label className="form-check-label">{checkbox.label}</label>
+                            {errors[checkbox.name] && <p className="text-danger">{errors[checkbox.name]}</p>}
+                        </> : "Loading..." }
                     </div>
                     <div>
                         {submit ? <input 
-                            onClick={handleSubmit}
                             value={submit.label}
                             type={submit.type}
-                            className="btn btn-outline-secondary"
-                        />: "Loading.."}</div>
+                            className={errors.error?"btn btn-outline-secondary disabled":"btn btn-outline-secondary"}
+                        />: "Loading.."}
+                    </div>
                 </form>
                 </div>
             </div>
