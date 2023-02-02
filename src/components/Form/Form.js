@@ -4,6 +4,13 @@ import { collection, addDoc } from "firebase/firestore";
 import swal from 'sweetalert';
 import { db } from "../../DB/db";
 
+function isOverEighteen(year, month, day) {
+    var now = parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''));
+    var dob = year * 10000 + month * 100 + day * 1; // Coerces strings to integers
+  
+    return now - dob >= 180000;
+}
+
 export function validate(state) {
     let error = { error: false };
     if(!state.full_name) {
@@ -17,6 +24,18 @@ export function validate(state) {
     if(!state.birth_date) {
         error.birth_date = "Fecha de nacimiento es requerido.";
         error.error = true;
+    }
+    else {
+        try {
+            const date = state.birth_date.split('-');
+            console.log(date)
+            const year = parseInt(date[0]);
+            const month = parseInt(date[1]);
+            const day = parseInt(date[2]);
+            if(!isOverEighteen(year, month, day)) error.birth_date = "Debes ser mayor a 18 años.";
+        } catch (error) {
+            console.log(error);
+        }
     }
     if(!state.country_of_origin){
         error.country_of_origin = "Pais de origen es requerido."
@@ -50,8 +69,7 @@ export default function Form() {
     useEffect(() => {
         getItems();
     },[]);
-    const inputs = items.filter(item => item.type !== "submit" && item.type !== "select" && item.type !== "checkbox" && item.type !== "date");
-    const [date] = items.filter(item => item.type === "date");
+    const inputs = items.filter(item => item.type !== "submit" && item.type !== "select" && item.type !== "checkbox");
     const [checkbox] = items.filter(item => item.type === "checkbox");
     const [select] = items.filter(item => item.type === "select");
     const [submit] = items.filter(item => item.type === "submit");
@@ -74,6 +92,7 @@ export default function Form() {
             swal({
                 title: "¡Registro completado!",
                 icon: "info",
+                text: "¿Desea ver las respuestas?",
                 buttons:["No", "Ver respuestas"]
             }).then(response => {
                 if(response) {
@@ -98,64 +117,57 @@ export default function Form() {
     console.log(process.env.REACT_APP_FIREBASE_APP_ID)
 
     return (
-        <div className="container">
+        <div className="container my-5">
             <div className="row justify-content-md-center">
-                <div className="col-md-auto">
-                <form onSubmit={handleSubmit}>
-                    {inputs && inputs.map((item,i) => {
-                        return <div key={i}>
-                            <label className="form-label">{item.label}: </label>    
-                            <input 
-                                type={item.type}
-                                required={item.required}
-                                name={item.name}
-                                value={input[item.name]}
-                                onChange={handleChange}
-                                className="form-control w-100 mb-2"
-                            />
-                            {errors[item.name] && <p className="text-danger">{errors[item.name]}</p>}
-                        </div>;
-                    })}
-                    <div> 
-                        {date ? <>
-                            <label className="form-label">{date.label}</label>
-                            <input 
-                                type={date.type}
-                                name={date.name} 
-                                value={input[date.name]}
-                                required={date.required}
-                                onChange={handleChange}
-                                className="form-control w-100 mb-2"
-                            /> 
-                            {errors[date.name] && <p className="text-danger">{errors[date.name]}</p>}
-                        </> : "Loading..." }
+                <div className="col-md-auto shadow-lg">
+                    <div className="my-3">
+                        <h3>¡Bienvenido/a!</h3>
+                        <p className="text-wrap">
+                            Completa el formulario para mejorar su experiencia en greydive.
+                        </p>
+                        <p>Obligatorio(*).</p>
+                    </div>
+                    <form onSubmit={handleSubmit} className="my-3" >
+                        {inputs && inputs.map((item,i) => {
+                            return <div key={i}>
+                                <label className="form-label">{item.label}: * </label>    
+                                <input 
+                                    type={item.type}
+                                    required={item.required}
+                                    name={item.name}
+                                    value={input[item.name]}
+                                    onChange={handleChange}
+                                    className="form-control w-100 mb-2"
+                                />
+                                <p className="text-danger fs-6">{errors[item.name] && errors[item.name]}</p>
+                            </div>;
+                        })}
                         
-                    </div>
-                    <div className="mb-2"> {select ? <>
-                        <Select item={select} handler={handleChange}/>
-                        {errors[select.name] && <p className="text-danger">{errors[select.name]}</p>}
-                    </>: "Loading..."} </div>
-                    <div className="form-check mb-2"> 
-                        {checkbox ? <>
-                            <input 
-                                className="form-check-input"
-                                type={checkbox.type}
-                                name={checkbox.name} 
-                                required={checkbox.required}
-                                onChange={handleChange}
-                            /> 
-                            <label className="form-check-label">{checkbox.label}</label>
-                            {errors[checkbox.name] && <p className="text-danger">{errors[checkbox.name]}</p>}
-                        </> : "Loading..." }
-                    </div>
-                    <div>
-                        {submit ? <input 
-                            value={submit.label}
-                            type={submit.type}
-                            className={errors.error?"btn btn-outline-secondary disabled":"btn btn-outline-secondary"}
-                        />: "Loading.."}
-                    </div>
-                </form>
+                        <div className="mb-2"> {select ? <>
+                            <Select item={select} handler={handleChange}/>
+                            <p className="text-danger fs-6">{errors[select.name] && errors[select.name]}</p>
+                        </>: "Loading..."} </div>
+                        <div className="form-check mb-2"> 
+                            {checkbox ? <>
+                                <input 
+                                    className="form-check-input"
+                                    type={checkbox.type}
+                                    name={checkbox.name} 
+                                    required={checkbox.required}
+                                    onChange={handleChange}
+                                /> 
+                                <label className="form-check-label">{checkbox.label} *</label>
+                                <p className="text-danger fs-6">{errors[checkbox.name] && errors[checkbox.name]} </p>
+                            </> : "Loading..." }
+                        </div>
+                        <div className="d-flex justify-content-center">
+                            {submit ? <input 
+                                value={submit.label}
+                                type={submit.type}
+                                className={errors.error?"btn btn-outline-secondary disabled":"btn btn-outline-secondary"}
+                            />: "Loading.."}
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
