@@ -96,6 +96,7 @@ export default function Form() {
                 buttons:["No", "Ver respuestas"]
             }).then(response => {
                 if(response) {
+                    //window.location = `https://challenge-greydive-seven.vercel.app/answer/${docRef.id}`;
                     window.location = `http://localhost:3000/answer/${docRef.id}`;
                 }
                 else {
