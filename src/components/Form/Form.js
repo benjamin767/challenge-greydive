@@ -18,6 +18,10 @@ export function validate(state) {
         error.birth_date = "Fecha de nacimiento es requerido.";
         error.error = true;
     }
+    if(!state.country_of_origin){
+        error.country_of_origin = "Pais de origen es requerido."
+        error.error = true;
+    }
     if(!state.terms_and_conditions){
         error.terms_and_conditions = "Debe aceptar los terminos y condiciones para avanzar.";
         error.error = true;
@@ -34,7 +38,7 @@ export default function Form() {
         country_of_origin: "",
     });
     const [errors, setErrors] = useState({error: true});
-    const getItems= () => {
+    const getItems = () => {
         fetch('./json/data.json')
         .then(response => response.json())
         .then(response => {
@@ -82,7 +86,7 @@ export default function Form() {
             return res;
         })
         .catch(error => console.log(error));
-        console.log("Document written with ID: ", docRef.id);
+        
         setInput({
             full_name: "",
             email: "",
@@ -129,6 +133,7 @@ export default function Form() {
                     </div>
                     <div className="mb-2"> {select ? <>
                         <Select item={select} handler={handleChange}/>
+                        {errors[select.name] && <p className="text-danger">{errors[select.name]}</p>}
                     </>: "Loading..."} </div>
                     <div className="form-check mb-2"> 
                         {checkbox ? <>
