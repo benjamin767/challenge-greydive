@@ -32,7 +32,10 @@ export function validate(state) {
             const year = parseInt(date[0]);
             const month = parseInt(date[1]);
             const day = parseInt(date[2]);
-            if(!isOverEighteen(year, month, day)) error.birth_date = "Debes ser mayor a 18 años.";
+            if(!isOverEighteen(year, month, day)) {
+                error.birth_date = "Debes ser mayor a 18 años.";
+                error.error = true;
+            }
         } catch (error) {
             console.log(error);
         }
@@ -124,7 +127,7 @@ export default function Form() {
                     <div className="my-3">
                         <h3>¡Bienvenido/a!</h3>
                         <p className="text-wrap">
-                            Completa el formulario para mejorar su experiencia en greydive.
+                            ¡Completa el formulario para ser parte de GREYDIVE.!
                         </p>
                         <p>Obligatorio(*).</p>
                     </div>
