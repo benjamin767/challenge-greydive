@@ -103,7 +103,7 @@ export default function Form() {
                     // window.location = `http://localhost:3000/answer/${docRef.id}`;
                 }
                 else {
-                    window.location = "http://localhost:3000/";
+                    window.location = "https://challenge-greydive-seven.vercel.app";
                 }
             });
             return res;
